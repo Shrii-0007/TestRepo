@@ -7,34 +7,17 @@ trigger:
 - main
 
 pool:
-  vmImage: 'windows-latest'
+  name: 'Default'
 
 variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
-steps:
-- task: NuGetToolInstaller@1
-
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: '$(solution)'
-
-- task: VSBuild@1
-  inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-
-- task: VSTest@2
-  inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-- task: PreApproval
-  inputs:
-  - deployment: PreApprovalJob
+stages:
+- stage: PreApproval
+  jobs:
+  - job: PreApprovalJob
     displayName: 'Pre-Approval Job'
     pool:
       name: 'Default'
@@ -43,30 +26,16 @@ steps:
       runOnce:
         deploy:
           steps:
+          - task: NuGetToolInstaller@1
+
+          - task: NuGetCommand@2
+            inputs:
+              restoreSolution: '$(solution)'
+
+          - task: VSBuild@1
+            inputs:
+              solution: '$(solution)'
+              msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+              platform: '$(buildPlatform)'
+              configuration: '$(buildConfiguration)'
           - script: echo 'Pre-Approval Job'
-
-- task: Deploy
-  inputs:
-  - deployment: 'DeployJob'
-    displayName: 'Deploy Job'
-    pool:
-      name: 'Default'
-    environment: 'dev' # Replace with your environment name
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - script: echo 'Deploy Job'
-
-- task: Release
-  inputs:
-  - deployment: ReleaseJob
-    displayName: 'Release Job'
-    pool:
-      name: 'Default'
-    environment: 'dev' # Replace with your environment name
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - script: echo 'Release Job'
