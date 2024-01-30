@@ -33,7 +33,7 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 - task: PreApproval
-  jobs:
+  inputs:
   - deployment: PreApprovalJob
     displayName: 'Pre-Approval Job'
     pool:
@@ -46,8 +46,8 @@ steps:
           - script: echo 'Pre-Approval Job'
 
 - task: Deploy
-  jobs:
-  - deployment: DeployJob
+  inputs:
+   - deployment: 'DeployJob'
     displayName: 'Deploy Job'
     pool:
       name: 'Default'
