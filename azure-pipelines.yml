@@ -12,7 +12,7 @@ pool:
 variables:
 - group: 'cicd'
   solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
+  buildPlatform:'Any CPU'
   buildConfiguration: 'Release'
 
 steps:
