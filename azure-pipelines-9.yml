@@ -1,13 +1,5 @@
-# ASP.NET Core (.NET Framework)
-# Build and test ASP.NET Core projects targeting the full .NET Framework.
-# Add steps that publish symbols, save build artifacts, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
-
 trigger:
 - main
-
-pool:
-  name: 'Default'
 
 variables:
   solution: '**/*.sln'
@@ -15,27 +7,47 @@ variables:
   buildConfiguration: 'Release'
 
 stages:
+- stage: Build
+  jobs:
+  - job: BuildJob
+    displayName: 'Build Job'
+    pool:
+      name: 'Default'
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '3.0'
+        installationPath: $(Agent.ToolsDirectory)/dotnet
+        includePreviewVersions: true
+    - task: NuGetToolInstaller@1
+    - task: NuGetCommand@2
+      inputs:
+        restoreSolution: '$(solution)'
+    - task: VSBuild@1
+      inputs:
+        solution: '$(solution)'
+        msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+    - task: VSTest@2
+      inputs:
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+
 - stage: PreApproval
   jobs:
-  - job: PreApprovalJob
+  - deployment: PreApprovalJob
     displayName: 'Pre-Approval Job'
     pool:
       name: 'Default'
-      environment: 'dev' # Replace with your environment name
+    environment: 'dev' # Replace with your environment name
     strategy:
       runOnce:
         deploy:
           steps:
-          - task: NuGetToolInstaller@1
-
-          - task: NuGetCommand@2
-            inputs:
-              restoreSolution: '$(solution)'
-
-          - task: VSBuild@1
-            inputs:
-              solution: '$(solution)'
-              msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
-              platform: '$(buildPlatform)'
-              configuration: '$(buildConfiguration)'
           - script: echo 'Pre-Approval Job'
+
+
+
+
