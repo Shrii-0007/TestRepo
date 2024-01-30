@@ -10,9 +10,10 @@ pool:
  name: Default
 
 variables:
+- group: 'cicd'
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+  buildConfiguration:'Release'
 
 steps:
 - task: NuGetToolInstaller@1
