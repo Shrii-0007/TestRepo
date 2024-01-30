@@ -1,17 +1,33 @@
 trigger:
 - main
 
-variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
-
 stages:
+- stage: Approve
+  jobs:
+  - job: ApprovalJob
+    displayName: 'All Approvers Must Approve'
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    - task: WaitForApproval@1
+      inputs:
+        timeOutInMinutes: '05'
+        notificationMessage: 'Approval needed before build'
+      env:
+        environmentName: 'dev' # Replace with your environment name
+        approvalName: 'Approval' # Replace with your desired approval name
+
 - stage: Build
   jobs:
   - job: BuildJob
+    displayName: 'Build Job'
+    dependsOn: Approve
     pool:
-      vmImage: 'windows-latest'
+      name: 'Default'
+    variables:
+      solution: '**/*.sln'
+      buildPlatform: 'Any CPU'
+      buildConfiguration: 'Release'
     steps:
     - task: NuGetToolInstaller@1
     - task: NuGetCommand@2
@@ -27,18 +43,3 @@ stages:
       inputs:
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
-
-- stage: Approve
-  jobs:
-  - job: ApprovalJob
-    displayName: 'All Approvers Must Approve'
-    pool:
-      name: 'Default'
-    steps:
-    - task: WaitForApproval@1
-      inputs:
-        timeOutInMinutes: '05'
-        notificationMessage: 'Approval needed before build'
-      env:
-        environmentName: 'dev' # Replace with your environment name
-        approvalName: 'BuildApproval' # Replace with your desired approval name
