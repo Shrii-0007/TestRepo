@@ -21,7 +21,7 @@ stages:
     displayName: 'Pre-Approval Job'
     pool:
       name: 'Default'
-    environment: 'dev' # Replace with your environment name
+      environment: 'dev' # Replace with your environment name
     strategy:
       runOnce:
         deploy:
